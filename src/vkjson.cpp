@@ -19,6 +19,7 @@ struct Cache {
     PyObject_VAR_HEAD
     RunScope scope;
     PyObject * export_dict;
+    bool export_invalid;
     Symbols imported;
     Symbols exported;
     int commands_len;
@@ -140,6 +141,7 @@ Cache * Context_meth_cache(Context * self, PyObject * commands) {
     res->scope = self->scope;
     res->scope.base = res->base;
     res->export_dict = NULL;
+    res->export_invalid = true;
     return res;
 }
 
@@ -181,6 +183,24 @@ PyObject * Cache_meth_scope(Cache * self) {
 }
 
 Cache * Cache_meth_load(Cache * self, PyObject * args, PyObject * kwargs) {
+    if (int args_len = (int)PyTuple_Size(args)) {
+        if (kwargs || args_len != 1) {
+            PyErr_Format(PyExc_TypeError, "invalid arguments");
+            return 0;
+        }
+        kwargs = PyTuple_GetItem(args, 0);
+        if (!PyDict_Check(kwargs)) {
+            PyErr_Format(PyExc_TypeError, "invalid arguments");
+            return 0;
+        }
+        args = empty_tuple;
+    }
+    void ** values = (void **)(self->base + self->imported.location);
+    for (int i = 0; i < self->imported.count; ++i) {
+        if (PyObject * obj = PyDict_GetItem(kwargs, PyList_GetItem(self->imported.ids, i))) {
+            values[i] = PyLong_AsVoidPtr(obj);
+        }
+    }
     Py_INCREF(self);
     return self;
 }
@@ -190,6 +210,7 @@ Cache * Cache_meth_run(Cache * self) {
     for (int i = 0; i < self->commands_len; ++i) {
         run_proc[commands[i].command_code](&self->scope, self->base + commands[i].location);
     }
+    self->export_invalid = true;
     Py_INCREF(self);
     return self;
 }
@@ -197,6 +218,15 @@ Cache * Cache_meth_run(Cache * self) {
 PyObject * Cache_meth_export(Cache * self) {
     if (!self->export_dict) {
         self->export_dict = PyDict_New();
+    }
+    if (self->export_invalid) {
+        self->export_invalid = false;
+        void ** values = (void **)(self->base + self->exported.location);
+        for (int i = 0; i < self->exported.count; ++i) {
+            PyObject * value = PyLong_FromVoidPtr(values[i]);
+            PyDict_SetItem(self->export_dict, PyList_GetItem(self->exported.ids, i), value);
+            Py_DECREF(value);
+        }
     }
     Py_INCREF(self->export_dict);
     return self->export_dict;

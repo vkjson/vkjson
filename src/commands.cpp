@@ -7,15 +7,21 @@ void * load_noop(CacheScope * scope, PyObject * obj) {
 void run_noop(RunScope * scope, void * arg) {
 }
 
+struct ImportArg * load_import(CacheScope * scope, PyObject * obj);
+void run_import(RunScope * scope, struct ImportArg * arg);
+
+struct ExportArg * load_export(CacheScope * scope, PyObject * obj);
+#define run_export run_noop
+
 LoadProc load_proc[] = {
-    (LoadProc)load_noop,
-    (LoadProc)load_noop,
+    (LoadProc)load_import,
+    (LoadProc)load_export,
     (LoadProc)load_noop,
 };
 
 RunProc run_proc[] = {
-    (RunProc)run_noop,
-    (RunProc)run_noop,
+    (RunProc)run_import,
+    (RunProc)run_export,
     (RunProc)run_noop,
 };
 

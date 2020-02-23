@@ -10,9 +10,9 @@ ctx.select({
 })
 
 cache = ctx.cache([
-    {'type': 'import'},
+    {'type': 'import', 'ids': ['x']},
     {'type': 'create_instance'},
-    {'type': 'export'},
+    {'type': 'export', 'ids': ['x']},
 ])
 
 thread = vkjson.thread()

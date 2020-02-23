@@ -4,6 +4,8 @@ ext = Extension(
     name='vkjson',
     sources=[
         './src/commands.cpp',
+        './src/commands/custom/export.cpp',
+        './src/commands/custom/import.cpp',
         './src/run_scope.cpp',
         './src/vkjson.cpp',
     ],
@@ -35,7 +37,7 @@ ext = Extension(
         './include/vulkan/vulkan_xlib.h',
         './include/vulkan/vulkan.h',
     ],
-    include_dirs=['include'],
+    include_dirs=['include', 'src'],
     extra_compile_args=['-fpermissive'],
     libraries=['vulkan-1'],
 )

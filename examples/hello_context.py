@@ -10,9 +10,9 @@ ctx.select({
 })
 
 ctx.run([
-    {'type': 'import'},
+    {'type': 'import', 'ids': ['x']},
     {'type': 'create_instance'},
-    {'type': 'export'},
+    {'type': 'export', 'ids': []},
 ])
 
 print(ctx.scope())
