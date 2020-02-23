@@ -1,6 +1,5 @@
 #include "common.hpp"
 #include "allocator.hpp"
-#include "cache_command.hpp"
 #include "commands.hpp"
 #include "run_scope.hpp"
 
@@ -23,10 +22,7 @@ struct Cache {
     Symbols imported;
     Symbols exported;
     int commands_len;
-    union {
-        CacheCommand commands[1];
-        char base[1];
-    };
+    char base[1];
 };
 
 PyTypeObject * Context_type;
@@ -71,6 +67,7 @@ Thread * vkjson_meth_thread(Context * self, PyObject * args, PyObject * kwargs) 
 
 Cache * Context_meth_cache(Context * self, PyObject * commands) {
     if (!PyList_Check(commands)) {
+        PyErr_Format(PyExc_TypeError, "not a list");
         return NULL;
     }
 
@@ -87,21 +84,24 @@ Cache * Context_meth_cache(Context * self, PyObject * commands) {
     scope->refs = NULL;
 
     int commands_len = (int)PyList_Size(commands);
-    CacheCommand * commands_array = scope->data.alloc<CacheCommand>(commands_len);
+    Command * commands_array = scope->data.alloc<Command>(commands_len);
 
     for (int i = 0; i < commands_len; ++i) {
         PyObject * obj = PyList_GetItem(commands, i);
         if (!PyDict_Check(obj)) {
+            PyErr_Format(PyExc_TypeError, "not a dict");
             return NULL;
         }
 
         PyObject * type_obj = PyDict_GetItemString(obj, "type");
         if (!type_obj) {
+            PyErr_Format(PyExc_KeyError, "type");
             return NULL;
         }
 
         PyObject * command_code_obj = PyDict_GetItem(command_codes, type_obj);
         if (!command_code_obj) {
+            PyErr_Format(PyExc_ValueError, "invalid type");
             return NULL;
         }
 
@@ -144,7 +144,7 @@ Cache * Context_meth_cache(Context * self, PyObject * commands) {
 }
 
 Context * Context_meth_select(Context * self, PyObject * args, PyObject * kwargs) {
-    if (!load_scope(&self->scope, args, kwargs)) {
+    if (!load_run_scope(&self->scope, args, kwargs)) {
         return NULL;
     }
     Py_INCREF(self);
@@ -152,11 +152,11 @@ Context * Context_meth_select(Context * self, PyObject * args, PyObject * kwargs
 }
 
 PyObject * Context_meth_scope(Context * self) {
-    return dump_scope(&self->scope);
+    return dump_run_scope(&self->scope);
 }
 
 Cache * Cache_meth_select(Cache * self, PyObject * args, PyObject * kwargs) {
-    if (!load_scope(&self->scope, args, kwargs)) {
+    if (!load_run_scope(&self->scope, args, kwargs)) {
         return NULL;
     }
     Py_INCREF(self);
@@ -164,7 +164,7 @@ Cache * Cache_meth_select(Cache * self, PyObject * args, PyObject * kwargs) {
 }
 
 PyObject * Cache_meth_scope(Cache * self) {
-    return dump_scope(&self->scope);
+    return dump_run_scope(&self->scope);
 }
 
 Cache * Cache_meth_load(Cache * self, PyObject * args, PyObject * kwargs) {
@@ -173,8 +173,9 @@ Cache * Cache_meth_load(Cache * self, PyObject * args, PyObject * kwargs) {
 }
 
 Cache * Cache_meth_run(Cache * self) {
+    Command * commands = (Command *)self->base;
     for (int i = 0; i < self->commands_len; ++i) {
-        run_proc[self->commands[i].command_code](&self->scope, self->base + self->commands[i].location);
+        run_proc[commands[i].command_code](&self->scope, self->base + commands[i].location);
     }
     Py_INCREF(self);
     return self;
@@ -218,9 +219,9 @@ PyObject * Context_meth_run(Context * self, PyObject * args, PyObject * kwargs) 
             return NULL;
         }
     }
-    Cache * exec_res = Cache_meth_run(cache);
-    Py_XDECREF(exec_res);
-    if (!exec_res) {
+    Cache * run_res = Cache_meth_run(cache);
+    Py_XDECREF(run_res);
+    if (!run_res) {
         Py_DECREF(cache);
         return NULL;
     }

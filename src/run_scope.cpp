@@ -1,12 +1,14 @@
 #include "run_scope.hpp"
 
-int load_scope(RunScope * scope, PyObject * args, PyObject * kwargs) {
+int load_run_scope(RunScope * scope, PyObject * args, PyObject * kwargs) {
     if (int args_len = (int)PyTuple_Size(args)) {
         if (kwargs || args_len != 1) {
+            PyErr_Format(PyExc_TypeError, "invalid arguments");
             return 0;
         }
         kwargs = PyTuple_GetItem(args, 0);
         if (!PyDict_Check(kwargs)) {
+            PyErr_Format(PyExc_TypeError, "invalid arguments");
             return 0;
         }
         args = empty_tuple;
@@ -26,7 +28,7 @@ int load_scope(RunScope * scope, PyObject * args, PyObject * kwargs) {
     );
 }
 
-PyObject * dump_scope(RunScope * scope) {
+PyObject * dump_run_scope(RunScope * scope) {
     return Py_BuildValue(
         "{sKsKsKsKsKsKsK}",
         "instance", scope->instance,

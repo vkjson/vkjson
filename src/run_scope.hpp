@@ -12,5 +12,5 @@ struct RunScope {
     char * base;
 };
 
-int load_scope(RunScope * scope, PyObject * args, PyObject * kwargs);
-PyObject * dump_scope(RunScope * scope);
+int load_run_scope(RunScope * scope, PyObject * args, PyObject * kwargs);
+PyObject * dump_run_scope(RunScope * scope);

@@ -3,6 +3,11 @@
 #include "cache_scope.hpp"
 #include "run_scope.hpp"
 
+struct Command {
+    int command_code;
+    int location;
+};
+
 enum CommandCodes {
     COMMAND_IMPORT,
     COMMAND_EXPORT,
