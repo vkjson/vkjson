@@ -37,6 +37,7 @@ ext = Extension(
     ],
     include_dirs=['include'],
     extra_compile_args=['-fpermissive'],
+    libraries=['vulkan-1'],
 )
 
 setup(
