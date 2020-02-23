@@ -11,6 +11,7 @@ struct Command {
 enum CommandCodes {
     COMMAND_IMPORT,
     COMMAND_EXPORT,
+    COMMAND_SELECT_INSTANCE,
     COMMAND_CREATE_INSTANCE,
 };
 

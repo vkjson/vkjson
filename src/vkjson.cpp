@@ -240,13 +240,12 @@ PyObject * Cache_meth_get(Cache * self, PyObject * key) {
 }
 
 PyObject * Context_meth_run(Context * self, PyObject * args, PyObject * kwargs) {
-    static char * keywords[] = {"commands", "objects", "select", NULL};
+    static char * keywords[] = {"commands", "objects", NULL};
 
     PyObject * commands;
     PyObject * objects = Py_None;
-    int select = true;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|Op", keywords, &commands, &objects, &select)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|O", keywords, &commands, &objects)) {
         return NULL;
     }
 
@@ -269,15 +268,8 @@ PyObject * Context_meth_run(Context * self, PyObject * args, PyObject * kwargs) 
         return NULL;
     }
     Py_DECREF(cache);
+    self->scope = cache->scope;
     PyObject * res = Cache_meth_export(cache);
-    if (select) {
-        Context * select_res = Context_meth_select(self, empty_tuple, res);
-        Py_XDECREF(select_res);
-        if (!select_res) {
-            Py_DECREF(res);
-            return NULL;
-        }
-    }
     return res;
 }
 

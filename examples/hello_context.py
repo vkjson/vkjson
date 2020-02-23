@@ -28,8 +28,8 @@ ctx.run([
         ]
     },
     {
-        'type': 'export',
-        'ids': ['instance'],
+        'type': 'select_instance',
+        'instance': 'instance',
     }
 ])
 
