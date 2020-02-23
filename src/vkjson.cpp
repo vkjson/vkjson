@@ -1,5 +1,7 @@
 #include "common.hpp"
 #include "allocator.hpp"
+#include "cache_command.hpp"
+#include "commands.hpp"
 #include "run_scope.hpp"
 
 struct Context {
@@ -17,8 +19,14 @@ struct Thread {
 struct Cache {
     PyObject_VAR_HEAD
     RunScope scope;
-    PyObject * exported;
-    char base[1];
+    PyObject * export_dict;
+    Symbols imported;
+    Symbols exported;
+    int commands_len;
+    union {
+        CacheCommand commands[1];
+        char base[1];
+    };
 };
 
 PyTypeObject * Context_type;
@@ -61,11 +69,38 @@ Thread * vkjson_meth_thread(Context * self, PyObject * args, PyObject * kwargs) 
     return res;
 }
 
-Cache * Context_meth_cache(Context * self, PyObject * tasks) {
-    int size = 1024;
-    Cache * res = PyObject_NewVar(Cache, Cache_type, size / 8);
-    res->exported = NULL;
+Cache * Context_meth_cache(Context * self, PyObject * commands) {
+    if (!PyList_Check(commands)) {
+        return NULL;
+    }
+
+    CacheScope cache_scope = {};
+    CacheScope * scope = &cache_scope;
+    scope->data = self->data;
+    scope->temp = self->temp;
+    scope->data.reset();
+    scope->temp.reset();
+
+    scope->store = PyDict_New();
+    scope->imported = {};
+    scope->exported = {};
+    scope->refs = NULL;
+
+    int commands_len = (int)PyList_Size(commands);
+
+    Py_XINCREF(scope->imported.ids);
+    Py_XINCREF(scope->exported.ids);
+    Py_DECREF(scope->store);
+    scope->store = NULL;
+
+    Cache * res = PyObject_NewVar(Cache, Cache_type, scope->data.loc / 8);
+    res->commands_len = commands_len;
+    res->imported = scope->imported;
+    res->exported = scope->exported;
+
     res->scope = self->scope;
+    res->scope.base = res->base;
+    res->export_dict = NULL;
     return res;
 }
 
@@ -104,32 +139,32 @@ Cache * Cache_meth_run(Cache * self) {
 }
 
 PyObject * Cache_meth_export(Cache * self) {
-    if (!self->exported) {
-        self->exported = PyDict_New();
+    if (!self->export_dict) {
+        self->export_dict = PyDict_New();
     }
-    Py_INCREF(self->exported);
-    return self->exported;
+    Py_INCREF(self->export_dict);
+    return self->export_dict;
 }
 
 PyObject * Cache_meth_get(Cache * self, PyObject * key) {
-    PyObject * exported = Cache_meth_export(self);
-    PyObject * res = PyDict_GetItem(exported, key);
-    Py_DECREF(exported);
+    PyObject * export_dict = Cache_meth_export(self);
+    PyObject * res = PyDict_GetItem(export_dict, key);
+    Py_DECREF(export_dict);
     return res;
 }
 
 PyObject * Context_meth_run(Context * self, PyObject * args, PyObject * kwargs) {
-    static char * keywords[] = {"tasks", "objects", "select", NULL};
+    static char * keywords[] = {"commands", "objects", "select", NULL};
 
-    PyObject * tasks;
+    PyObject * commands;
     PyObject * objects = Py_None;
     int select = true;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|Op", keywords, &tasks, &objects, &select)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|Op", keywords, &commands, &objects, &select)) {
         return NULL;
     }
 
-    Cache * cache = Context_meth_cache(self, tasks);
+    Cache * cache = Context_meth_cache(self, commands);
     if (!cache) {
         return NULL;
     }
@@ -240,6 +275,8 @@ extern "C" PyObject * PyInit_vkjson() {
     }
 
     PyObject * module = PyModule_Create(&vkjson_def);
+
+    build_command_codes();
 
     Context_type = (PyTypeObject *)PyType_FromSpec(&Context_spec);
     Cache_type = (PyTypeObject *)PyType_FromSpec(&Cache_spec);

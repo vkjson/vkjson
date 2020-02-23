@@ -3,13 +3,19 @@ from setuptools import Extension, setup
 ext = Extension(
     name='vkjson',
     sources=[
+        './src/commands.cpp',
         './src/run_scope.cpp',
         './src/vkjson.cpp',
     ],
     depends=[
-        './src/allocator.hpp',
-        './src/common.hpp',
-        './src/run_scope.hpp',
+        '.src/allocator.hpp',
+        '.src/cache_command.hpp',
+        '.src/cache_scope.hpp',
+        '.src/commands.hpp',
+        '.src/common.hpp',
+        '.src/run_scope.hpp',
+        '.src/symbols.hpp',
+        '.src/variable.hpp',
         './include/vulkan/vk_icd.h',
         './include/vulkan/vk_layer.h',
         './include/vulkan/vk_platform.h',
