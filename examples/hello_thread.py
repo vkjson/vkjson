@@ -11,7 +11,6 @@ ctx.select({
 
 cache = ctx.cache([
     {'type': 'import', 'ids': ['x']},
-    {'type': 'create_instance'},
     {'type': 'export', 'ids': ['x']},
 ])
 

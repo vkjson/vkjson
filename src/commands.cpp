@@ -13,16 +13,19 @@ void run_import(RunScope * scope, struct ImportArg * arg);
 struct ExportArg * load_export(CacheScope * scope, PyObject * obj);
 #define run_export run_noop
 
+struct CreateInstanceArg * load_create_instance(CacheScope * scope, PyObject * obj);
+void run_create_instance(RunScope * scope, struct CreateInstanceArg * arg);
+
 LoadProc load_proc[] = {
     (LoadProc)load_import,
     (LoadProc)load_export,
-    (LoadProc)load_noop,
+    (LoadProc)load_create_instance,
 };
 
 RunProc run_proc[] = {
     (RunProc)run_import,
     (RunProc)run_export,
-    (RunProc)run_noop,
+    (RunProc)run_create_instance,
 };
 
 PyObject * command_codes;

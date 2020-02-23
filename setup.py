@@ -4,8 +4,10 @@ ext = Extension(
     name='vkjson',
     sources=[
         './src/commands.cpp',
+        './src/commands/create/create_instance.cpp',
         './src/commands/custom/export.cpp',
         './src/commands/custom/import.cpp',
+        './src/parse.cpp',
         './src/run_scope.cpp',
         './src/vkjson.cpp',
     ],
@@ -15,6 +17,7 @@ ext = Extension(
         '.src/cache_scope.hpp',
         '.src/commands.hpp',
         '.src/common.hpp',
+        '.src/parse.hpp',
         '.src/run_scope.hpp',
         '.src/symbols.hpp',
         '.src/variable.hpp',

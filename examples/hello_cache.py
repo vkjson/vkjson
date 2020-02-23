@@ -10,9 +10,27 @@ ctx.select({
 })
 
 cache = ctx.cache([
-    {'type': 'import', 'ids': ['x']},
-    {'type': 'create_instance'},
-    {'type': 'export', 'ids': ['x']},
+    {
+        'type': 'create_instance',
+        'id': 'instance',
+        'application': {
+            'application_name': 'Application',
+            'application_version': '1.0.0',
+            'engine_name': 'Engine',
+            'engine_version': '1.0.0',
+            'api_version': '1.0.0',
+        },
+        'layers': [
+            'VK_LAYER_KHRONOS_validation'
+        ],
+        'extensions': [
+            'VK_EXT_debug_utils',
+        ]
+    },
+    {
+        'type': 'export',
+        'ids': ['instance'],
+    }
 ])
 
 cache.run()
