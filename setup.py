@@ -7,6 +7,7 @@ ext = Extension(
         './src/vkjson.cpp',
     ],
     depends=[
+        './src/allocator.hpp',
         './src/common.hpp',
         './src/run_scope.hpp',
         './include/vulkan/vk_icd.h',

@@ -1,10 +1,13 @@
 #include "common.hpp"
+#include "allocator.hpp"
 #include "run_scope.hpp"
 
 struct Context {
     PyObject_HEAD
     RunScope scope;
     PyObject * allocated;
+    Allocator data;
+    Allocator temp;
 };
 
 struct Thread {
@@ -39,6 +42,10 @@ Context * vkjson_meth_context(PyObject * self, PyObject * args, PyObject * kwarg
     Context * context = PyObject_New(Context, Context_type);
     char * ptr = (char *)PyMem_Malloc(max_data_size + max_temp_size);
     context->allocated = PyCapsule_New(ptr, NULL, free_later);
+    context->data.base = ptr;
+    context->data.size = max_data_size;
+    context->temp.base = ptr + max_data_size;
+    context->temp.size = max_temp_size;
     context->scope = {};
     return context;
 }
