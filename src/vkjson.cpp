@@ -87,6 +87,42 @@ Cache * Context_meth_cache(Context * self, PyObject * commands) {
     scope->refs = NULL;
 
     int commands_len = (int)PyList_Size(commands);
+    CacheCommand * commands_array = scope->data.alloc<CacheCommand>(commands_len);
+
+    for (int i = 0; i < commands_len; ++i) {
+        PyObject * obj = PyList_GetItem(commands, i);
+        if (!PyDict_Check(obj)) {
+            return NULL;
+        }
+
+        PyObject * type_obj = PyDict_GetItemString(obj, "type");
+        if (!type_obj) {
+            return NULL;
+        }
+
+        PyObject * command_code_obj = PyDict_GetItem(command_codes, type_obj);
+        if (!command_code_obj) {
+            return NULL;
+        }
+
+        int command_code = PyLong_AsLong(command_code_obj);
+        commands_array[i].location = (int)((char *)load_proc[command_code](scope, obj) - scope->data.base);
+        commands_array[i].command_code = command_code;
+    }
+
+    VariableRef * refs = scope->refs;
+    while (refs) {
+        Variable * variable = refs->variable;
+        int * locations = scope->data.alloc<int>(refs->count);
+        variable->location = (int)((char *)locations - (char *)variable);
+        variable->count = refs->count;
+        LocationList * lst = refs->lst;
+        for (int i = 0; i < variable->count; ++i) {
+            locations[i] = (int)(scope->data.base + lst->location - (char *)variable);
+            lst = lst->next;
+        }
+        refs = refs->next;
+    }
 
     Py_XINCREF(scope->imported.ids);
     Py_XINCREF(scope->exported.ids);
@@ -94,6 +130,9 @@ Cache * Context_meth_cache(Context * self, PyObject * commands) {
     scope->store = NULL;
 
     Cache * res = PyObject_NewVar(Cache, Cache_type, scope->data.loc / 8);
+    memcpy(res->base, scope->data.base, scope->data.loc);
+    scope->data.relocate(res->base);
+
     res->commands_len = commands_len;
     res->imported = scope->imported;
     res->exported = scope->exported;
@@ -134,6 +173,9 @@ Cache * Cache_meth_load(Cache * self, PyObject * args, PyObject * kwargs) {
 }
 
 Cache * Cache_meth_run(Cache * self) {
+    for (int i = 0; i < self->commands_len; ++i) {
+        run_proc[self->commands[i].command_code](&self->scope, self->base + self->commands[i].location);
+    }
     Py_INCREF(self);
     return self;
 }

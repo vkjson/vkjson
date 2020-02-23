@@ -10,9 +10,9 @@ ctx.select({
 })
 
 ctx.run([
-    {'type': 'create_device_memory'},
-    {'type': 'create_swapchain'},
-    {'type': 'create_buffer'},
+    {'type': 'import'},
+    {'type': 'create_instance'},
+    {'type': 'export'},
 ])
 
 print(ctx.scope())

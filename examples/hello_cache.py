@@ -10,9 +10,9 @@ ctx.select({
 })
 
 cache = ctx.cache([
-    {'type': 'create_device_memory'},
-    {'type': 'create_swapchain'},
-    {'type': 'create_buffer'},
+    {'type': 'import'},
+    {'type': 'create_instance'},
+    {'type': 'export'},
 ])
 
 cache.run()
