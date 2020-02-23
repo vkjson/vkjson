@@ -143,6 +143,19 @@ Cache * Context_meth_cache(Context * self, PyObject * commands) {
     return res;
 }
 
+PyObject * Context_meth_physical_devices(Context * self) {
+    self->temp.reset();
+    uint32_t num_physical_devices = 0;
+    vkEnumeratePhysicalDevices(self->scope.instance, &num_physical_devices, NULL);
+    VkPhysicalDevice * physical_devices = self->temp.alloc<VkPhysicalDevice>(num_physical_devices);
+    vkEnumeratePhysicalDevices(self->scope.instance, &num_physical_devices, physical_devices);
+    PyObject * res = PyList_New(num_physical_devices);
+    for (uint32_t i = 0; i < num_physical_devices; ++i) {;
+        PyList_SetItem(res, i, PyLong_FromVoidPtr(physical_devices[i]));
+    }
+    return res;
+}
+
 Context * Context_meth_select(Context * self, PyObject * args, PyObject * kwargs) {
     if (!load_run_scope(&self->scope, args, kwargs)) {
         return NULL;
@@ -250,6 +263,7 @@ Thread * Thread_meth_wait(Thread * self) {
 
 PyMethodDef Context_methods[] = {
     {"cache", (PyCFunction)Context_meth_cache, METH_O, NULL},
+    {"physical_devices", (PyCFunction)Context_meth_physical_devices, METH_NOARGS, NULL},
     {"select", (PyCFunction)Context_meth_select, METH_VARARGS | METH_KEYWORDS, NULL},
     {"run", (PyCFunction)Context_meth_run, METH_VARARGS | METH_KEYWORDS, NULL},
     {"scope", (PyCFunction)Context_meth_scope, METH_NOARGS, NULL},
