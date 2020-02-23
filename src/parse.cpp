@@ -1,5 +1,18 @@
 #include "parse.hpp"
 
+VkFlags get_flags(CacheScope * scope, PyObject * obj, const char * key) {
+    VkFlags res = 0;
+    PyObject * value;
+    if (obj && (value = PyDict_GetItemString(obj, key))) {
+        int size = (int)PyList_Size(value);
+        for (int i = 0; i < size; ++i) {
+            PyObject * tmp = PyDict_GetItem(enums, PyList_GetItem(value, i));
+            res |= PyLong_AsUnsignedLong(tmp);
+        }
+    }
+    return res;
+}
+
 uint32_t get_version(CacheScope * scope, PyObject * obj, const char * key) {
     PyObject * value;
     if (obj && (value = PyDict_GetItemString(obj, key))) {

@@ -7,3 +7,4 @@
 
 extern PyObject * empty_tuple;
 extern PyObject * helper;
+extern PyObject * enums;

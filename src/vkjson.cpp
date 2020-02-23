@@ -344,6 +344,7 @@ PyModuleDef vkjson_def = {PyModuleDef_HEAD_INIT, "vkjson", NULL, -1, vkjson_meth
 
 PyObject * empty_tuple;
 PyObject * helper;
+PyObject * enums;
 
 extern "C" PyObject * PyInit_vkjson() {
     empty_tuple = PyTuple_New(0);
@@ -352,6 +353,8 @@ extern "C" PyObject * PyInit_vkjson() {
     if (!helper) {
         return NULL;
     }
+
+    enums = PyObject_GetAttrString(helper, "enums");
 
     PyObject * module = PyModule_Create(&vkjson_def);
 

@@ -12,7 +12,7 @@ CreateInstanceArg * load_create_instance(CacheScope * scope, PyObject * obj) {
 
 	info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     info.pNext = NULL;
-	info.flags = 0;
+	info.flags = get_flags(scope, obj, "flags");
 
 	if (PyObject * application = PyDict_GetItemString(obj, "application")) {
         if (!PyDict_Check(application)) {
